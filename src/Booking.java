@@ -16,11 +16,28 @@ class Booking implements Serializable {
     private static final long serialVersionUID = 1L;
 
     public Booking(String id, String guestId, String tripId, double payment, String status) {
-        this.id = id;
-        this.guestId = guestId;
-        this.tripId = tripId;
+        if (id == null || id.trim().isEmpty()) {
+            throw new IllegalArgumentException("Booking ID cannot be empty");
+        }
+        if (guestId == null || guestId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Guest ID cannot be empty");
+        }
+        if (tripId == null || tripId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Trip ID cannot be empty");
+        }
+        if (payment < 0) {
+            throw new IllegalArgumentException("Payment amount cannot be negative");
+        }
+        if (status == null || status.trim().isEmpty()) {
+            throw new IllegalArgumentException("Status cannot be empty");
+        }
+        
+        this.id = id.trim();
+        this.guestId = guestId.trim();
+        this.tripId = tripId.trim();
         this.payment = payment;
-        this.status = status;
+        this.status = status.trim();
+        this.date = new Date(); // Set current date as default
     }
 
     public Date getDate() {
@@ -40,10 +57,21 @@ class Booking implements Serializable {
     }
 
     public void setPayment(double payment) {
+        if (payment < 0) {
+            throw new IllegalArgumentException("Payment amount cannot be negative");
+        }
         this.payment = payment;
     }
 
-    
+    public void setDate(Date date) {
+        if (date == null) {
+            throw new IllegalArgumentException("Booking date cannot be null");
+        }
+        if (date.before(new Date())) {
+            throw new IllegalArgumentException("Booking date cannot be in the past");
+        }
+        this.date = date;
+    }
 
     public String getId() {
         return id;
