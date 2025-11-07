@@ -22,6 +22,7 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
 public class BusGUI extends Application {
@@ -29,12 +30,12 @@ public class BusGUI extends Application {
     @Override
     public void start(Stage primaryStage) {
                 
-        Admin.admins = loadFromFile("admins.dat");
-        Receptionist.receptionists = loadFromFile("receptionists.dat");
-        Guest.guests = loadFromFile("guests.dat");
-        Vehicle.vehicles = loadFromFile("vehicles.dat");
-        Trip.trips = loadFromFile("trips.dat");
-        Booking.bookings = loadFromFile("bookings.dat");
+        Admin.admins = loadFromFile("admins.dat",Admin.class);
+        Receptionist.receptionists = loadFromFile("receptionists.dat",Receptionist.class);
+        Guest.guests = loadFromFile("guests.dat",Guest.class);
+        Vehicle.vehicles = loadFromFile("vehicles.dat",Vehicle.class);
+        Trip.trips = loadFromFile("trips.dat",Trip.class);
+        Booking.bookings = loadFromFile("bookings.dat",Booking.class);
         
         
         // Main Menu
@@ -65,7 +66,7 @@ public class BusGUI extends Application {
         
         
         primaryStage.setOnCloseRequest(e -> {
-    e.consume(); 
+    e.consume(); // Consume the default close action
 
     // Save data to files
     saveToFile("admins.dat",Admin.admins);
@@ -75,7 +76,7 @@ public class BusGUI extends Application {
     saveToFile("trips.dat",Trip.trips);
     saveToFile("bookings.dat",Booking.bookings);
 
-    // Confirm exit
+    // Confirm exit (optional)
     Alert exitAlert = new Alert(Alert.AlertType.CONFIRMATION);
     exitAlert.setTitle("Exit Confirmation");
     exitAlert.setHeaderText("Are you sure you want to exit?");
@@ -84,7 +85,7 @@ public class BusGUI extends Application {
 
     if (result == ButtonType.OK) {
         System.out.println("Application is closing.");
-        primaryStage.close();
+        primaryStage.close(); // Close the application
     } else {
         System.out.println("Exit canceled.");
     }
@@ -93,6 +94,9 @@ public class BusGUI extends Application {
     }
     private void openAdminMenuWindow(Admin admin,Stage primaryStage,Scene mainScene){
     //Admin Menu
+//        Stage adminMenu = new Stage();
+//        adminMenu.setTitle("Admin Menu");
+        //primaryStage.setTitle("Admin Menu");
         VBox adminPane = new VBox();
         adminPane.setAlignment(Pos.CENTER);
         adminPane.setSpacing(20);
@@ -135,6 +139,8 @@ public class BusGUI extends Application {
     }
     private void openReceptionistMenuWindow(Receptionist receptionist,Stage primaryStage,Scene mainScene){
     // Receptionist Menu
+//        Stage receptionistMenu = new Stage();
+//        receptionistMenu.setTitle("Receptionist Menu");
         VBox receptionistPane = new VBox();
         receptionistPane.setAlignment(Pos.CENTER);
         receptionistPane.setSpacing(20);
@@ -163,99 +169,111 @@ public class BusGUI extends Application {
         primaryStage.setScene(mainScene);
         primaryStage.setTitle("Sign in");
         });
+
     }
     private void openGuestMenuWindow(Guest guest,Stage primaryStage,Scene mainScene){
-    // Guest Menu
         VBox guestPane = new VBox();
         guestPane.setAlignment(Pos.CENTER);
         guestPane.setSpacing(20);
         Button bookingDetailsBtn = new Button("View Booking Details");
         Button rateBookingBtn = new Button("Rate a Booking");
         Button previousBtn = new Button("Previous");
-        
         bookingDetailsBtn.setPrefSize(250, 50);
         rateBookingBtn.setPrefSize(250, 50);
-
         guestPane.getChildren().addAll(bookingDetailsBtn, rateBookingBtn,previousBtn);
-
         Scene guestScene = new Scene(guestPane, 400, 300);
         primaryStage.setScene(guestScene);
         primaryStage.setTitle("Guest Menu");
-        
         bookingDetailsBtn.setOnAction(e -> openViewBookingDetailsWindow(guest,primaryStage,guestScene));
         rateBookingBtn.setOnAction(e -> openRateBookingWindow(guest,primaryStage,guestScene));
-        
         previousBtn.setOnAction(e -> {
         primaryStage.setScene(mainScene);
         primaryStage.setTitle("Sign in");
         });
     }
     
-    private void openSignInWindow(Object obj,Stage primaryStage,Scene mainScene){
-    
+private void openSignInWindow(Object obj, Stage primaryStage, Scene mainScene) {
     VBox signInPane = new VBox();
     signInPane.setAlignment(Pos.CENTER);
     signInPane.setSpacing(20);
-    
-    Label usernameLabel=new Label("Username: "),passwordLabel=new Label("Password: ");
-    TextField usernameTextField=new TextField(),passwordTextField=new TextField(); 
-    
-    Button signInBtn = new Button("Sign in"); 
+
+    Label usernameLabel = new Label("Username: "), passwordLabel = new Label("Password: ");
+    TextField usernameTextField = new TextField(), passwordTextField = new TextField();
+
+    Button signInBtn = new Button("Sign in");
     Button previousBtn = new Button("Previous");
-    
+
+    Label errorMessage = new Label(); // Label to display error message
+    errorMessage.setStyle("-fx-text-fill: red;"); // Set text color to red
+    errorMessage.setFont(new Font("Arial",15));
     HBox usernamePane = new HBox();
     usernamePane.setAlignment(Pos.CENTER);
     usernamePane.setSpacing(10);
     HBox passwordPane = new HBox();
     passwordPane.setAlignment(Pos.CENTER);
     passwordPane.setSpacing(10);
-    usernamePane.getChildren().addAll(usernameLabel,usernameTextField);
-    passwordPane.getChildren().addAll(passwordLabel,passwordTextField);
-    
-    signInPane.getChildren().addAll(usernamePane,passwordPane,signInBtn,previousBtn);
-    Scene signInScene = new Scene(signInPane,400,400);
-    primaryStage.setTitle("Sing in");
+    usernamePane.getChildren().addAll(usernameLabel, usernameTextField);
+    passwordPane.getChildren().addAll(passwordLabel, passwordTextField);
+
+    signInPane.getChildren().addAll(usernamePane, passwordPane, signInBtn, previousBtn, errorMessage);
+    Scene signInScene = new Scene(signInPane, 400, 400);
+    primaryStage.setTitle("Sign in");
     primaryStage.setScene(signInScene);
-    
-     
-    
-    signInBtn.setOnAction(e -> { 
+
+    signInBtn.setOnAction(e -> {
         System.out.println("Sign in button clicked");
-        String username = usernameTextField.getText(),password=passwordTextField.getText();
-    if(obj instanceof Admin){
-        for(Admin a : Admin.admins){
-            if(a.getId().equals(password) && a.getName().equalsIgnoreCase(username))
-                openAdminMenuWindow(a,primaryStage,signInScene);
+        String username = usernameTextField.getText(), password = passwordTextField.getText();
+        boolean credentialsValid = false;
+
+        if (obj instanceof Admin) {
+            for (Admin a : Admin.admins) {
+                if (a.getId().equals(password) && a.getName().equalsIgnoreCase(username)) {
+                    openAdminMenuWindow(a, primaryStage, signInScene);
+                    credentialsValid = true;
+                    break;
+                }
+            }
+        } else if (obj instanceof Receptionist) {
+            for (Receptionist r : Receptionist.receptionists) {
+                if (r.getId().equals(password) && r.getName().equalsIgnoreCase(username)) {
+                    openReceptionistMenuWindow(r, primaryStage, signInScene);
+                    credentialsValid = true;
+                    break;
+                }
+            }
+        } else if (obj instanceof Guest) {
+            for (Guest g : Guest.guests) {
+                if (g.getId().equals(password) && g.getName().equalsIgnoreCase(username)) {
+                    openGuestMenuWindow(g, primaryStage, signInScene);
+                    credentialsValid = true;
+                    break;
+                }
+            }
         }
-    }else if(obj instanceof Receptionist)
-    {
-        for(Receptionist r : Receptionist.receptionists){
-            if(r.getId().equals(password) && r.getName().equalsIgnoreCase(username))
-                openReceptionistMenuWindow(r,primaryStage,signInScene);
-    }
-    }else if(obj instanceof Guest)
-    {
-        for(Guest g : Guest.guests){
-            if(g.getId().equals(password) && g.getName().equalsIgnoreCase(username))
-                openGuestMenuWindow(g,primaryStage,signInScene);
+
+        if (!credentialsValid) {
+            errorMessage.setText("Invalid Credentials, Please Try Again!");
         }
-    }
-    System.out.println("Sign in button end");
+
+        System.out.println("Sign in button end");
     });
+
     previousBtn.setOnAction(e -> {
         primaryStage.setScene(mainScene);
         primaryStage.setTitle("Bus Ticket Booking System");
     });
-    
-    } 
+}
 
     // Admin Menu Sub-windows
     private void openManageVehiclesWindow(Admin admin,Stage primaryStage,Scene adminScene) {
+//    Stage vehicleStage = new Stage();
+//    vehicleStage.setTitle("Manage Vehicles");
 
     VBox vehiclePane = new VBox();
     vehiclePane.setAlignment(Pos.CENTER);
     vehiclePane.setSpacing(20);
-    
+
+    // Labels and TextFields for input
     Label vehicleIdLabel = new Label("Vehicle ID:");
     TextField vehicleIdField = new TextField();
 
@@ -281,7 +299,7 @@ public class BusGUI extends Application {
 
         Vehicle newVehicle = new Vehicle(id, category);
         admin.addVehicle(newVehicle);
-        
+        //Vehicle.vehicles.add(newVehicle);
 
         showAlert(Alert.AlertType.INFORMATION, "Success", "Vehicle added successfully: ID = " + id);
     });
@@ -325,7 +343,7 @@ public class BusGUI extends Application {
         showAlert(Alert.AlertType.INFORMATION, "Result:", result);
     });
 
-    
+    // Add components to the pane
     vehiclePane.getChildren().addAll(
         vehicleIdLabel, vehicleIdField,
         vehicleCategoryLabel, vehicleCategoryField,
@@ -341,33 +359,43 @@ public class BusGUI extends Application {
     primaryStage.setTitle("Admin Menu");
     });
     
+//    vehicleStage.setScene(vehicleScene);
+//    vehicleStage.show();
 }
 
 
     private void openManageTripsWindow(Admin admin,Stage primaryStage,Scene adminScene) {
+//    Stage tripStage = new Stage();
+//    tripStage.setTitle("Manage Trips");
 
     VBox tripPane = new VBox();
     tripPane.setAlignment(Pos.CENTER);
     tripPane.setSpacing(20);
 
-    
+    // Labels and TextFields for input
     Label tripIdLabel = new Label("Trip ID:");
     TextField tripIdField = new TextField();
+    tripIdField.setMaxWidth(90);
 
     Label tripCategoryLabel = new Label("Category:");
     TextField tripCategoryField = new TextField();
-
-    Label tripFromLabel = new Label("From:");
-    TextField tripFromField = new TextField();
-
-    Label tripToLabel = new Label("To:");
-    TextField tripToField = new TextField();
-
-    Label vehicleIdLabel = new Label("Vehicle ID:");
-    TextField vehicleIdField = new TextField();
-
+    tripCategoryField.setMaxWidth(90);
+    
     Label tripDateLabel = new Label("Date (dd/MM/yyyy):");
     TextField tripDateField = new TextField();
+    tripDateField.setMaxWidth(90);
+    
+    Label tripFromLabel = new Label("From:");
+    TextField tripFromField = new TextField();
+    tripFromField.setMaxWidth(90);
+    
+    Label tripToLabel = new Label("To:");
+    TextField tripToField = new TextField();
+    tripToField.setMaxWidth(90);
+    
+    Label vehicleIdLabel = new Label("Vehicle ID:");
+    TextField vehicleIdField = new TextField();
+    vehicleIdField.setMaxWidth(90); 
 
     // Buttons for trip management
     Button addTripBtn = new Button("Add Trip");
@@ -399,7 +427,7 @@ public class BusGUI extends Application {
             Trip.trips.add(newTrip);
 
             showAlert(Alert.AlertType.INFORMATION, "Success", "Trip added successfully: ID = " + tripId);
-        } catch (Exception ex) {
+        } catch (ParseException ex) {
             showAlert(Alert.AlertType.ERROR, "Error", "Invalid date format. Please use dd/MM/yyyy.");
         }
     });
@@ -493,10 +521,9 @@ public class BusGUI extends Application {
     primaryStage.setScene(adminScene);
     primaryStage.setTitle("Admin menu");
     });
-//    tripStage.setScene(tripScene);
-//    tripStage.show();
 }
 
+// Helper method to show alerts
 private void showAlert(Alert.AlertType alertType, String title, String content) {
     Alert alert = new Alert(alertType);
     alert.setTitle(title);
@@ -506,6 +533,8 @@ private void showAlert(Alert.AlertType alertType, String title, String content) 
 }
 
     private void openManageUsersWindow(Admin admin,Stage primaryStage,Scene adminScene) {
+//    Stage userStage = new Stage();
+//    userStage.setTitle("Manage Users");
 
     VBox userPane = new VBox();
     userPane.setAlignment(Pos.CENTER);
@@ -533,6 +562,8 @@ private void showAlert(Alert.AlertType alertType, String title, String content) 
     primaryStage.setScene(adminScene);
     primaryStage.setTitle("Admin menu");
     });
+//    userStage.setScene(userScene);
+//    userStage.show();
 }
     private void openAddUserWindow(Admin admin) {
     Stage addUserStage = new Stage();
@@ -586,7 +617,6 @@ private void showAlert(Alert.AlertType alertType, String title, String content) 
     });
 
     addUserPane.getChildren().addAll(userTypeLabel, userTypeComboBox, idLabel, idField, nameLabel, nameField, submitBtn);
-
     Scene scene = new Scene(addUserPane, 300, 300);
     addUserStage.setScene(scene);
     addUserStage.show();
@@ -594,11 +624,9 @@ private void showAlert(Alert.AlertType alertType, String title, String content) 
     private void openEditUserWindow(Admin admin) {
     Stage editUserStage = new Stage();
     editUserStage.setTitle("Edit User");
-
     VBox editUserPane = new VBox();
     editUserPane.setAlignment(Pos.CENTER);
     editUserPane.setSpacing(20);
-
     // Labels and TextFields
     Label userTypeLabel = new Label("Select User Type:");
     ComboBox<String> userTypeComboBox = new ComboBox<>();
@@ -645,8 +673,6 @@ private void showAlert(Alert.AlertType alertType, String title, String content) 
     editUserStage.setScene(scene);
     editUserStage.show();
 }
-
-
     private void openRemoveUserWindow(Admin admin) {
     Stage removeUserStage = new Stage();
     removeUserStage.setTitle("Remove User");
@@ -729,13 +755,8 @@ private void showAlert(Alert.AlertType alertType, String title, String content) 
     searchUserStage.setScene(scene);
     searchUserStage.show();
 }
-    
-
     // Report Actions with Statistics
     private void openViewVehicleReportsWindow(Admin admin,Stage primaryStage,Scene adminScene) {
-//    Stage vehicleReportStage = new Stage();
-//    vehicleReportStage.setTitle("View Vehicle Reports");
-
     VBox vehicleReportPane = new VBox();
     vehicleReportPane.setAlignment(Pos.CENTER);
     vehicleReportPane.setSpacing(20);
@@ -1937,7 +1958,7 @@ private void showAlert(Alert.AlertType alertType, String title, String content) 
     }
 }
 
-    private <T> List<T> loadFromFile(String FILE_NAME) {
+    private <T> List<T> loadFromFile(String FILE_NAME,Class<T> myArray) {
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(FILE_NAME))) {
             return (List<T>) ois.readObject();
         } catch (IOException | ClassNotFoundException e) {            

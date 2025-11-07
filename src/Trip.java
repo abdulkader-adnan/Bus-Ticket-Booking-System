@@ -1,8 +1,6 @@
-
 import java.io.*;
 import java.text.*;
 import java.util.*;
-
 class Trip implements Serializable {
     private String id;
     private String category;
@@ -25,15 +23,9 @@ class Trip implements Serializable {
         this.date = date;
         
     }
-    
-
     public Date getDate() {
         return date;
     }
-
-
-    
-     
 
     public String getId() {
         return id;
@@ -54,8 +46,6 @@ class Trip implements Serializable {
     public void setCategory(String category) {
         this.category = category;
     }
-    
-
     public void addBooking(double payment) {
         this.bookings++;
         this.revenue += payment;
